@@ -1,5 +1,7 @@
 # Datepicker Field for Laravel Nova
 
+[![Tests](https://github.com/adtention/nova-datepicker-field/actions/workflows/tests.yml/badge.svg)](https://github.com/adtention/nova-datepicker-field/actions/workflows/tests.yml)
+
 A Laravel Nova date field built as a thin wrapper around [@vuepic/vue-datepicker](https://vue3datepicker.com/).
 
 | Compatibility | Version |
@@ -107,8 +109,19 @@ npm run dev
 Build for release:
 
 ```bash
-cd nova-datepicker-field
 npm run prod
+```
+
+Run tests:
+
+```bash
+valet php vendor/bin/phpunit
+```
+
+Run a specific test:
+
+```bash
+valet php vendor/bin/phpunit --filter=it_defaults_locale_meta_to_the_application_locale
 ```
 
 ## License
