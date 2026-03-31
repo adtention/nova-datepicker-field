@@ -5,7 +5,7 @@ A Laravel Nova date field built as a thin wrapper around [@vuepic/vue-datepicker
 | Compatibility | Version |
 | ---- | ----- |
 | Laravel Nova | `^5.0` |
-| PHP | `^8.1` |
+| PHP | `^8.4` |
 
 ## Installation
 
