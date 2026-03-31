@@ -16,8 +16,16 @@ jobs:
     strategy:
       fail-fast: true
       matrix:
-        php: ['8.4']
-        laravel: ['11.*', '12.*', '13.*']
+        include:
+          - php: '8.4'
+            laravel: '11.*'
+            testbench: '9.*'
+          - php: '8.4'
+            laravel: '12.*'
+            testbench: '10.*'
+          - php: '8.4'
+            laravel: '13.*'
+            testbench: '11.*'
 
     name: PHP ${{ matrix.php }} / Laravel ${{ matrix.laravel }}
 
@@ -35,8 +43,9 @@ jobs:
       - name: Authenticate Nova
         run: composer config http-basic.nova.laravel.com "${{ secrets.NOVA_USERNAME }}" "${{ secrets.NOVA_LICENSE_KEY }}"
 
-      - name: Pin Laravel version
-        run: composer require "illuminate/support:${{ matrix.laravel }}" --no-interaction --no-update
+      - name: Pin Laravel and Testbench versions
+        run: |
+          composer require "illuminate/support:${{ matrix.laravel }}" "orchestra/testbench:${{ matrix.testbench }}" --no-interaction --no-update
 
       - name: Install dependencies
         run: composer install --no-interaction --prefer-dist
