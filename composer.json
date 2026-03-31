@@ -1,0 +1,37 @@
+{
+    "name": "adtention/nova-datepicker-field",
+    "description": "A Laravel Nova field.",
+    "keywords": [
+        "laravel",
+        "nova"
+    ],
+    "license": "MIT",
+    "require": {
+        "php": "^8.4",
+        "illuminate/support": "^10.0|^11.0|^12.0|^13.0"
+    },
+    "require-dev": {
+        "laravel/nova": "^5.0",
+        "laravel/nova-devtool": "^1.7"
+    },
+    "repositories": [
+        { "type": "composer", "url": "https://nova.laravel.com" }
+    ],
+    "autoload": {
+        "psr-4": {
+            "Adtention\\DatepickerField\\": "src/"
+        }
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "Adtention\\DatepickerField\\FieldServiceProvider"
+            ]
+        }
+    },
+    "config": {
+        "sort-packages": true
+    },
+    "minimum-stability": "dev",
+    "prefer-stable": true
+}
