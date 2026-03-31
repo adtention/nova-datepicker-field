@@ -12,7 +12,9 @@
     },
     "require-dev": {
         "laravel/nova": "^5.0",
-        "laravel/nova-devtool": "^1.7"
+        "laravel/nova-devtool": "^1.7",
+        "orchestra/testbench": "^11.0",
+        "phpunit/phpunit": "^13.0"
     },
     "repositories": [
         { "type": "composer", "url": "https://nova.laravel.com" }
@@ -20,6 +22,11 @@
     "autoload": {
         "psr-4": {
             "Adtention\\DatepickerField\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Adtention\\DatepickerField\\Tests\\": "tests/"
         }
     },
     "extra": {
