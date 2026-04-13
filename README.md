@@ -115,13 +115,13 @@ npm run prod
 Run tests:
 
 ```bash
-valet php vendor/bin/phpunit
+php vendor/bin/phpunit
 ```
 
 Run a specific test:
 
 ```bash
-valet php vendor/bin/phpunit --filter=it_defaults_locale_meta_to_the_application_locale
+php vendor/bin/phpunit --filter=it_defaults_locale_meta_to_the_application_locale
 ```
 
 ## License
