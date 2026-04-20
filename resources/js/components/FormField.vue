@@ -31,6 +31,11 @@
 import { DependentFormField, HandlesValidationErrors } from 'laravel-nova'
 import { VueDatePicker } from '@vuepic/vue-datepicker'
 import { resolveDateFnsLocale } from '../dateFnsLocale'
+import {
+  normalizeDateFilterValue,
+  parseFlexibleDateInput,
+  parseIsoDate,
+} from '../dateParsing'
 
 export default {
   mixins: [DependentFormField, HandlesValidationErrors],
@@ -50,7 +55,7 @@ export default {
         enterSubmit: true,
         tabSubmit: true,
         openMenu: 'open',
-        format: 'yyyy-MM-dd',
+        format: (value) => parseFlexibleDateInput(value, this.currentField?.locale),
         selectOnFocus: true,
         applyOnBlur: true,
       },
@@ -181,24 +186,13 @@ export default {
       }
 
       if (typeof value === 'string') {
-        const strictDatePattern = /^\d{4}-\d{2}-\d{2}$/
-        const dateOnlyMatch = value.match(/^(\d{4})-(\d{2})-(\d{2})$/)
+        const parsedIsoDate = parseIsoDate(value)
 
-        if (dateOnlyMatch !== null) {
-          const parsedDateOnly = this.createStrictDateFromYmd(
-            Number(dateOnlyMatch[1]),
-            Number(dateOnlyMatch[2]),
-            Number(dateOnlyMatch[3]),
-          )
-
-          if (parsedDateOnly !== null) {
-            return parsedDateOnly
-          }
-
-          return null
+        if (parsedIsoDate !== null) {
+          return parsedIsoDate
         }
 
-        if (strictDatePattern.test(value)) {
+        if (/^\d{4}-\d{2}-\d{2}$/.test(value)) {
           return null
         }
 
@@ -210,36 +204,8 @@ export default {
       return null
     },
 
-    createStrictDateFromYmd(year, month, day) {
-      const parsedDate = new Date(year, month - 1, day)
-
-      if (Number.isNaN(parsedDate.getTime())) {
-        return null
-      }
-
-      if (
-        parsedDate.getFullYear() !== year
-        || parsedDate.getMonth() !== month - 1
-        || parsedDate.getDate() !== day
-      ) {
-        return null
-      }
-
-      return parsedDate
-    },
-
     normalizeDateForSubmission(value) {
-      const parsedDate = this.parseDateValue(value)
-
-      if (parsedDate === null) {
-        return ''
-      }
-
-      const year = String(parsedDate.getFullYear())
-      const month = String(parsedDate.getMonth() + 1).padStart(2, '0')
-      const day = String(parsedDate.getDate()).padStart(2, '0')
-
-      return `${year}-${month}-${day}`
+      return normalizeDateFilterValue(value) ?? ''
     },
   },
 }

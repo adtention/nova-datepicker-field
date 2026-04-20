@@ -46,6 +46,11 @@
 import debounce from 'lodash/debounce'
 import { VueDatePicker } from '@vuepic/vue-datepicker'
 import { resolveDateFnsLocale } from '../dateFnsLocale'
+import {
+  normalizeDateFilterValue,
+  parseFlexibleDateInput,
+  parseIsoDate,
+} from '../dateParsing'
 
 export default {
   components: {
@@ -69,25 +74,27 @@ export default {
     },
   },
 
-  data: () => ({
-    startValue: null,
-    endValue: null,
-    debouncedEventEmitter: null,
-    timeConfiguration: {
-      enableTimePicker: false,
-    },
-    textInputConfiguration: {
-      enterSubmit: true,
-      tabSubmit: true,
-      openMenu: 'open',
-      format: 'yyyy-MM-dd',
-      selectOnFocus: true,
-      applyOnBlur: true,
-    },
-    formats: {
-      input: 'yyyy-MM-dd',
-    },
-  }),
+  data() {
+    return {
+      startValue: null,
+      endValue: null,
+      debouncedEventEmitter: null,
+      timeConfiguration: {
+        enableTimePicker: false,
+      },
+      textInputConfiguration: {
+        enterSubmit: true,
+        tabSubmit: true,
+        openMenu: 'open',
+        format: (value) => parseFlexibleDateInput(value, this.field?.locale),
+        selectOnFocus: true,
+        applyOnBlur: true,
+      },
+      formats: {
+        input: 'yyyy-MM-dd',
+      },
+    }
+  },
 
   created() {
     this.debouncedEventEmitter = debounce(() => this.emitFilterChange(), 500)
@@ -149,45 +156,14 @@ export default {
       }
 
       if (typeof value === 'string') {
-        const dateOnlyMatch = value.match(/^(\d{4})-(\d{2})-(\d{2})$/)
-
-        if (dateOnlyMatch === null) {
-          return null
-        }
-
-        const parsedDate = new Date(
-          Number(dateOnlyMatch[1]),
-          Number(dateOnlyMatch[2]) - 1,
-          Number(dateOnlyMatch[3]),
-        )
-
-        if (
-          Number.isNaN(parsedDate.getTime())
-          || parsedDate.getFullYear() !== Number(dateOnlyMatch[1])
-          || parsedDate.getMonth() !== Number(dateOnlyMatch[2]) - 1
-          || parsedDate.getDate() !== Number(dateOnlyMatch[3])
-        ) {
-          return null
-        }
-
-        return parsedDate
+        return parseIsoDate(value)
       }
 
       return null
     },
 
     normalizeDateForFilter(value) {
-      const parsedDate = this.parseDateValue(value)
-
-      if (parsedDate === null) {
-        return null
-      }
-
-      const year = String(parsedDate.getFullYear())
-      const month = String(parsedDate.getMonth() + 1).padStart(2, '0')
-      const day = String(parsedDate.getDate()).padStart(2, '0')
-
-      return `${year}-${month}-${day}`
+      return normalizeDateFilterValue(value)
     },
   },
 
