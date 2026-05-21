@@ -113,3 +113,196 @@
 .dark .nova-datepicker-field .dp__input::placeholder {
 	color: rgba(var(--colors-gray-500));
 }
+
+.nova-datepicker-chip-input {
+	display: flex;
+	flex-direction: column;
+	gap: 4px;
+	justify-content: flex-start;
+	min-height: 36px;
+	padding: 4px 8px;
+	background-color: rgba(var(--colors-white));
+	border: 1px solid rgba(var(--colors-gray-300));
+	border-radius: 4px;
+	color: rgba(var(--colors-gray-700));
+	box-shadow: rgba(var(--colors-black), 0.06) 0 1px 2px;
+	cursor: text;
+}
+
+.nova-datepicker-chip-input--empty {
+	gap: 0;
+	justify-content: center;
+}
+
+.nova-datepicker-chip-input:focus-visible {
+	outline: none;
+	border-color: rgba(var(--colors-primary-500));
+	box-shadow: rgba(var(--colors-primary-500), 0.35) 0 0 0 2px;
+}
+
+.nova-datepicker-chip-input--readonly {
+	background-color: rgba(var(--colors-gray-100));
+	color: rgba(var(--colors-gray-500));
+	cursor: not-allowed;
+}
+
+.nova-datepicker-chip-input__header {
+	display: flex;
+	align-items: center;
+	gap: 6px;
+	width: 100%;
+}
+
+.nova-datepicker-chip-input__icon {
+	width: 16px;
+	height: 16px;
+	flex-shrink: 0;
+	color: rgba(var(--colors-gray-400));
+}
+
+.nova-datepicker-chip-input__count {
+	font-size: 12px;
+	font-weight: 500;
+	line-height: 1;
+	color: rgba(var(--colors-gray-500));
+}
+
+.nova-datepicker-chip-input__clear {
+	margin-left: auto;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	padding: 2px;
+	border-radius: 4px;
+	color: rgba(var(--colors-gray-500));
+	line-height: 1;
+}
+
+.nova-datepicker-chip-input__clear:hover {
+	background-color: rgba(var(--colors-gray-200));
+	color: rgba(var(--colors-gray-700));
+}
+
+.nova-datepicker-chip-input__chips {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 4px;
+	max-height: 96px;
+	overflow-y: auto;
+	scrollbar-width: thin;
+}
+
+.nova-datepicker-chip-input__chips::-webkit-scrollbar {
+	width: 4px;
+}
+
+.nova-datepicker-chip-input__chips::-webkit-scrollbar-thumb {
+	border-radius: 999px;
+	background-color: rgba(var(--colors-gray-300));
+}
+
+.nova-datepicker-chip-input__chips::-webkit-scrollbar-track {
+	background-color: rgba(var(--colors-gray-100));
+}
+
+.nova-datepicker-chip-input__placeholder {
+	display: inline-flex;
+	align-items: center;
+	font-size: 13px;
+	line-height: 1.2;
+	color: rgba(var(--colors-gray-500));
+}
+
+.nova-datepicker-field--multiple .dp__clear_icon,
+.nova-datepicker-field--multiple .dp--clear-btn {
+	display: none;
+}
+
+.nova-datepicker-chip {
+	display: inline-flex;
+	align-items: center;
+	gap: 4px;
+	padding: 2px 8px;
+	font-size: 11px;
+	font-weight: 600;
+	line-height: 1.2;
+	border-radius: 9999px;
+	background-color: rgba(var(--colors-gray-200));
+	color: rgba(var(--colors-gray-800));
+}
+
+.nova-datepicker-chip-remove {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 14px;
+	height: 14px;
+	border-radius: 9999px;
+	line-height: 1;
+	background-color: rgba(var(--colors-gray-300));
+	color: rgba(var(--colors-gray-800));
+}
+
+.nova-datepicker-chip-remove:hover {
+	background-color: rgba(var(--colors-gray-400));
+}
+
+.dark .nova-datepicker-chip-input {
+	background-color: rgba(var(--colors-gray-900));
+	border-color: rgba(var(--colors-gray-700));
+	color: rgba(var(--colors-gray-100));
+	box-shadow: rgba(var(--colors-black), 0.25) 0 1px 2px;
+}
+
+.dark .nova-datepicker-chip-input:focus-visible {
+	border-color: rgba(var(--colors-primary-500));
+	box-shadow: rgba(var(--colors-primary-500), 0.4) 0 0 0 2px;
+}
+
+.dark .nova-datepicker-chip-input--readonly {
+	background-color: rgba(var(--colors-gray-800));
+	color: rgba(var(--colors-gray-500));
+}
+
+.dark .nova-datepicker-chip-input__icon {
+	color: rgba(var(--colors-gray-500));
+}
+
+.dark .nova-datepicker-chip-input__count {
+	color: rgba(var(--colors-gray-400));
+}
+
+.dark .nova-datepicker-chip-input__clear {
+	color: rgba(var(--colors-gray-400));
+}
+
+.dark .nova-datepicker-chip-input__clear:hover {
+	background-color: rgba(var(--colors-gray-700));
+	color: rgba(var(--colors-gray-200));
+}
+
+.dark .nova-datepicker-chip-input__chips::-webkit-scrollbar-thumb {
+	background-color: rgba(var(--colors-gray-600));
+}
+
+.dark .nova-datepicker-chip-input__chips::-webkit-scrollbar-track {
+	background-color: rgba(var(--colors-gray-800));
+}
+
+.dark .nova-datepicker-chip-input__placeholder {
+	color: rgba(var(--colors-gray-400));
+}
+
+.dark .nova-datepicker-chip {
+	background-color: rgba(var(--colors-gray-700));
+	color: rgba(var(--colors-gray-100));
+}
+
+.dark .nova-datepicker-chip-remove {
+	background-color: rgba(var(--colors-gray-600));
+	color: rgba(var(--colors-gray-100));
+}
+
+.dark .nova-datepicker-chip-remove:hover {
+	background-color: rgba(var(--colors-gray-500));
+}

@@ -83,6 +83,15 @@ Datepicker::make('Travel Date')
     ->locale('da');
 ```
 
+Enable multiple date selection with `multiple()`:
+
+```php
+use Adtention\DatepickerField\Datepicker;
+
+Datepicker::make('Available Dates', 'available_dates')
+    ->multiple();
+```
+
 ### Supported scope
 
 This package is intentionally lightweight for public package use: it wraps `@vuepic/vue-datepicker` for Nova, but does **not** expose the full upstream prop/slot API.

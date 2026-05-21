@@ -9,20 +9,139 @@
       <VueDatePicker
         v-model="value"
         class="w-full nova-datepicker-field"
+        :class="{ 'nova-datepicker-field--multiple': isMultiple }"
         :style="datePickerStyle"
         :locale="dateFnsLocale"
         :dark="isDarkMode"
+        :multi-dates="isMultiple"
+        :multi-dates-separator="multiDatesSeparator"
         :time-config="timeConfiguration"
         :min-date="minimumDate"
         :max-date="maximumDate"
-        :auto-apply="true"
-        :text-input="textInputConfiguration"
-        :formats="formats"
+        :auto-apply="autoApply"
+        :close-on-auto-apply="closeOnAutoApply"
+        :config="calendarConfiguration"
+        :action-row="actionRowConfiguration"
+        :format="inputDisplayFormat"
+        :text-input="textInputOptions"
+        :formats="formatOptions"
         :input-attrs="inputAttributes"
         :placeholder="currentField.name"
+        :clearable="!isMultiple"
         :disabled="currentlyIsReadonly"
         :readonly="currentlyIsReadonly"
-      />
+      >
+        <template
+          #dp-input="{
+            value: inputValue,
+            onBlur,
+            onEnter,
+            onFocus,
+            onInput,
+            onKeypress,
+            onPaste,
+            onTab,
+            openMenu,
+          }"
+        >
+          <div
+            v-if="isMultiple"
+            class="nova-datepicker-chip-input"
+            :class="{
+              'nova-datepicker-chip-input--readonly': currentlyIsReadonly,
+              'nova-datepicker-chip-input--empty': selectedDateChips.length === 0,
+            }"
+            tabindex="0"
+            role="button"
+            :aria-label="__('Open date picker')"
+            @click="openMenu"
+            @keydown.enter.prevent="openMenu"
+            @keydown.space.prevent="openMenu"
+            @keydown.delete.stop.prevent="removeLastSelectedDate"
+            @keydown.backspace.stop.prevent="removeLastSelectedDate"
+          >
+            <div class="nova-datepicker-chip-input__header">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 20 20"
+                fill="currentColor"
+                class="nova-datepicker-chip-input__icon"
+                aria-hidden="true"
+              >
+                <path fill-rule="evenodd" d="M5.75 2a.75.75 0 0 1 .75.75V4h7V2.75a.75.75 0 0 1 1.5 0V4h.25A2.75 2.75 0 0 1 18 6.75v8.5A2.75 2.75 0 0 1 15.25 18H4.75A2.75 2.75 0 0 1 2 15.25v-8.5A2.75 2.75 0 0 1 4.75 4H5V2.75A.75.75 0 0 1 5.75 2Zm-1 5.5c-.69 0-1.25.56-1.25 1.25v6.5c0 .69.56 1.25 1.25 1.25h10.5c.69 0 1.25-.56 1.25-1.25v-6.5c0-.69-.56-1.25-1.25-1.25H4.75Z" clip-rule="evenodd" />
+              </svg>
+
+              <span
+                v-if="selectedDateChips.length > 0"
+                class="nova-datepicker-chip-input__count"
+              >
+                {{ selectedDateChips.length }} {{ __('selected') }}
+              </span>
+
+              <span
+                v-else
+                class="nova-datepicker-chip-input__placeholder"
+              >
+                {{ __('Click to select dates') }}
+              </span>
+
+              <button
+                v-if="selectedDateChips.length > 0 && !currentlyIsReadonly"
+                type="button"
+                class="nova-datepicker-chip-input__clear"
+                :aria-label="__('Clear all dates')"
+                @mousedown.prevent.stop
+                @click.prevent.stop="clearSelectedDates"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="h-4 w-4">
+                  <path d="M6.28 5.22a.75.75 0 0 0-1.06 1.06L8.94 10l-3.72 3.72a.75.75 0 1 0 1.06 1.06L10 11.06l3.72 3.72a.75.75 0 1 0 1.06-1.06L11.06 10l3.72-3.72a.75.75 0 0 0-1.06-1.06L10 8.94 6.28 5.22Z" />
+                </svg>
+              </button>
+            </div>
+
+            <div
+              v-if="selectedDateChips.length > 0"
+              class="nova-datepicker-chip-input__chips"
+            >
+              <span
+                v-for="selectedDate in selectedDateChips"
+                :key="selectedDate.key"
+                class="nova-datepicker-chip"
+              >
+                <span>{{ selectedDate.label }}</span>
+                <button
+                  v-if="!currentlyIsReadonly"
+                  type="button"
+                  class="nova-datepicker-chip-remove"
+                  :aria-label="__('Remove') + ' ' + selectedDate.label"
+                  @mousedown.prevent.stop
+                  @click.prevent.stop="removeSelectedDate(selectedDate.index)"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="h-3 w-3">
+                    <path d="M6.28 5.22a.75.75 0 0 0-1.06 1.06L8.94 10l-3.72 3.72a.75.75 0 1 0 1.06 1.06L10 11.06l3.72 3.72a.75.75 0 1 0 1.06-1.06L11.06 10l3.72-3.72a.75.75 0 0 0-1.06-1.06L10 8.94 6.28 5.22Z" />
+                  </svg>
+                </button>
+              </span>
+            </div>
+          </div>
+
+          <input
+            v-else
+            class="w-full form-control form-input form-control-bordered"
+            :disabled="currentlyIsReadonly"
+            :placeholder="currentField.name"
+            :readonly="currentlyIsReadonly"
+            :value="inputValue"
+            @blur="onBlur"
+            @focus="onFocus"
+            @input="onInput"
+            @keydown.enter="onEnter"
+            @keydown.tab="onTab"
+            @keydown="onKeypress"
+            @paste="onPaste"
+          >
+        </template>
+      </VueDatePicker>
     </template>
   </DefaultField>
 </template>
@@ -62,9 +181,6 @@ export default {
       timeConfiguration: {
         enableTimePicker: false,
       },
-      formats: {
-        input: 'yyyy-MM-dd',
-      },
     }
   },
 
@@ -82,6 +198,40 @@ export default {
   },
 
   computed: {
+    calendarConfiguration() {
+      if (this.isMultiple) {
+        return {
+          closeOnAutoApply: false,
+        }
+      }
+
+      return null
+    },
+
+    actionRowConfiguration() {
+      if (this.isMultiple) {
+        return {
+          showCancel: false,
+          showPreview: false,
+          showSelect: false,
+        }
+      }
+
+      return null
+    },
+
+    autoApply() {
+      return true
+    },
+
+    closeOnAutoApply() {
+      return !this.isMultiple
+    },
+
+    isMultiple() {
+      return this.currentField?.multiple === true
+    },
+
     dateFnsLocale() {
       return resolveDateFnsLocale(this.currentField?.locale)
     },
@@ -104,6 +254,10 @@ export default {
       return this.parseDateValue(this.currentField.max)
     },
 
+    multiDatesSeparator() {
+      return ', '
+    },
+
     inputAttributes() {
       return {
         id: this.currentField.uniqueKey ?? this.currentField.attribute,
@@ -112,6 +266,78 @@ export default {
         inputmode: 'text',
       }
     },
+
+    formatOptions() {
+      return {
+        input: this.inputDisplayFormat,
+      }
+    },
+
+    inputDisplayFormat() {
+      return (value) => {
+        if (this.isMultiple) {
+          if (Array.isArray(value)) {
+            return value
+              .map((item) => this.formatDateForDisplay(item))
+              .filter((item) => item !== '')
+              .join(', ')
+          }
+
+          return this.formatDateForDisplay(value)
+        }
+
+        return this.formatDateForDisplay(value)
+      }
+    },
+
+    textInputOptions() {
+      if (this.isMultiple) {
+        return {
+          ...this.textInputConfiguration,
+          applyOnBlur: false,
+          enterSubmit: false,
+          selectOnFocus: false,
+          tabSubmit: false,
+        }
+      }
+
+      return this.textInputConfiguration
+    },
+
+    selectedDateChips() {
+      if (!this.isMultiple || !Array.isArray(this.value)) {
+        return []
+      }
+
+      return this.value
+        .map((item, index) => {
+          const normalizedDate = normalizeDateFilterValue(item)
+
+          if (normalizedDate === null) {
+            return null
+          }
+
+          return {
+            index,
+            key: `${normalizedDate}-${index}`,
+            label: this.formatDateForDisplay(item),
+            sortDate: normalizedDate,
+          }
+        })
+        .filter((item) => item !== null)
+        .sort((left, right) => {
+          if (left.sortDate < right.sortDate) {
+            return -1
+          }
+
+          if (left.sortDate > right.sortDate) {
+            return 1
+          }
+
+          return left.index - right.index
+        })
+    },
+
   },
 
   methods: {
@@ -154,20 +380,79 @@ export default {
      * Set the initial, internal value for the field.
      */
     setInitialValue() {
-      this.value = this.parseDateValue(this.currentField.value)
+      this.value = this.parseInitialValue(this.currentField.value)
     },
 
     /**
      * Fill the given FormData object with the field's internal value.
      */
     fill(formData) {
-      if (this.currentlyIsVisible) {
+      if (!this.currentlyIsVisible) {
+        return
+      }
+
+      if (this.isMultiple) {
         this.fillIfVisible(
           formData,
           this.fieldAttribute,
-          this.normalizeDateForSubmission(this.value),
+          JSON.stringify(this.normalizeDatesForSubmission(this.value)),
         )
+
+        return
       }
+
+      this.fillIfVisible(
+        formData,
+        this.fieldAttribute,
+        this.normalizeDateForSubmission(this.value),
+      )
+    },
+
+    parseInitialValue(value) {
+      if (!this.isMultiple) {
+        return this.parseDateValue(value)
+      }
+
+      if (value === null || value === undefined || value === '') {
+        return []
+      }
+
+      if (Array.isArray(value)) {
+        return value
+          .map((item) => this.parseDateValue(item))
+          .filter((item) => item !== null)
+      }
+
+      if (typeof value === 'string') {
+        const normalizedValue = value.trim()
+
+        if (normalizedValue === '') {
+          return []
+        }
+
+        if (normalizedValue.startsWith('[')) {
+          try {
+            const parsedJson = JSON.parse(normalizedValue)
+
+            if (Array.isArray(parsedJson)) {
+              return parsedJson
+                .map((item) => this.parseDateValue(item))
+                .filter((item) => item !== null)
+            }
+          } catch {
+            // Fallback to comma-separated parsing below.
+          }
+        }
+
+        return normalizedValue
+          .split(',')
+          .map((item) => this.parseDateValue(item.trim()))
+          .filter((item) => item !== null)
+      }
+
+      const parsedValue = this.parseDateValue(value)
+
+      return parsedValue === null ? [] : [parsedValue]
     },
 
     parseDateValue(value) {
@@ -206,6 +491,50 @@ export default {
 
     normalizeDateForSubmission(value) {
       return normalizeDateFilterValue(value) ?? ''
+    },
+
+    formatDateForDisplay(value) {
+      const parsedDate = this.parseDateValue(value)
+
+      if (parsedDate === null) {
+        return ''
+      }
+
+      return new Intl.DateTimeFormat(this.currentField?.locale, {
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+      }).format(parsedDate)
+    },
+
+    normalizeDatesForSubmission(value) {
+      if (!Array.isArray(value)) {
+        return []
+      }
+
+      return [...new Set(value
+        .map((item) => normalizeDateFilterValue(item))
+        .filter((item) => item !== null))]
+    },
+
+    removeSelectedDate(indexToRemove) {
+      if (!Array.isArray(this.value)) {
+        return
+      }
+
+      this.value = this.value.filter((item, index) => index !== indexToRemove)
+    },
+
+    removeLastSelectedDate() {
+      if (this.currentlyIsReadonly || !Array.isArray(this.value) || this.value.length === 0) {
+        return
+      }
+
+      this.value = this.value.slice(0, -1)
+    },
+
+    clearSelectedDates() {
+      this.value = []
     },
   },
 }
