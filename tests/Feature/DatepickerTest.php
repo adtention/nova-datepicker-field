@@ -138,6 +138,124 @@ class DatepickerTest extends TestCase
     }
 
     #[Test]
+    public function it_defaults_multiple_mode_to_false(): void
+    {
+        // Arrange & Act
+        $field = Datepicker::make('Start', 'date_start');
+
+        // Assert
+        $this->assertFalse((bool) ($field->meta()['multiple'] ?? null));
+        $this->assertFalse((bool) ($field->jsonSerialize()['multiple'] ?? null));
+    }
+
+    #[Test]
+    public function it_allows_enabling_multiple_mode(): void
+    {
+        // Arrange & Act
+        $field = Datepicker::make('Start', 'date_start')->multiple();
+
+        // Assert
+        $this->assertTrue((bool) ($field->meta()['multiple'] ?? false));
+        $this->assertTrue((bool) ($field->jsonSerialize()['multiple'] ?? false));
+    }
+
+    #[Test]
+    public function it_decodes_multiple_mode_json_payload_to_an_array_on_fill(): void
+    {
+        // Arrange
+        $field = Datepicker::make('Dates', 'dates')->multiple();
+        $request = NovaRequest::create('/', 'POST', [
+            'dates' => '["2026-07-01","2026-07-08"]',
+        ]);
+
+        $model = new class
+        {
+            /**
+             * @var array<string, mixed>
+             */
+            public array $attributes = [];
+
+            /**
+             * @param  array<string, mixed>  $attributes
+             */
+            public function forceFill(array $attributes): void
+            {
+                $this->attributes = array_merge($this->attributes, $attributes);
+            }
+        };
+
+        // Act
+        $field->fillInto($request, $model, 'dates');
+
+        // Assert
+        $this->assertSame(['2026-07-01', '2026-07-08'], $model->attributes['dates']);
+    }
+
+    #[Test]
+    public function it_decodes_multiple_mode_array_payload_to_an_array_on_fill(): void
+    {
+        // Arrange
+        $field = Datepicker::make('Dates', 'dates')->multiple();
+        $request = NovaRequest::create('/', 'POST', [
+            'dates' => ['2026-07-01', '2026-07-08'],
+        ]);
+
+        $model = new class
+        {
+            /**
+             * @var array<string, mixed>
+             */
+            public array $attributes = [];
+
+            /**
+             * @param  array<string, mixed>  $attributes
+             */
+            public function forceFill(array $attributes): void
+            {
+                $this->attributes = array_merge($this->attributes, $attributes);
+            }
+        };
+
+        // Act
+        $field->fillInto($request, $model, 'dates');
+
+        // Assert
+        $this->assertSame(['2026-07-01', '2026-07-08'], $model->attributes['dates']);
+    }
+
+    #[Test]
+    public function it_filters_invalid_and_duplicate_dates_in_multiple_mode_on_fill(): void
+    {
+        // Arrange
+        $field = Datepicker::make('Dates', 'dates')->multiple();
+        $request = NovaRequest::create('/', 'POST', [
+            'dates' => '["2026-07-01","2026-07-01","2026-02-31","foo"]',
+        ]);
+
+        $model = new class
+        {
+            /**
+             * @var array<string, mixed>
+             */
+            public array $attributes = [];
+
+            /**
+             * @param  array<string, mixed>  $attributes
+             */
+            public function forceFill(array $attributes): void
+            {
+                $this->attributes = array_merge($this->attributes, $attributes);
+            }
+        };
+
+        // Act
+        $field->fillInto($request, $model, 'dates');
+
+        // Assert
+        $this->assertSame(['2026-07-01'], $model->attributes['dates']);
+    }
+
+    #[Test]
     public function locale_method_returns_the_field_for_chaining(): void
     {
         // Arrange
