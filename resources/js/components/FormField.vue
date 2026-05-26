@@ -11,6 +11,7 @@
         class="w-full nova-datepicker-field"
         :class="{ 'nova-datepicker-field--multiple': isMultiple }"
         :style="datePickerStyle"
+        :teleport="true"
         :locale="dateFnsLocale"
         :dark="isDarkMode"
         :multi-dates="isMultiple"
