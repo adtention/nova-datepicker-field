@@ -92,6 +92,8 @@ Datepicker::make('Available Dates', 'available_dates')
     ->multiple();
 ```
 
+In multiple mode, click a start date, hold Shift, and click an end date to select every date in that period.
+
 ### Supported scope
 
 This package is intentionally lightweight for public package use: it wraps `@vuepic/vue-datepicker` for Nova, but does **not** expose the full upstream prop/slot API.
