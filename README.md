@@ -92,7 +92,7 @@ Datepicker::make('Available Dates', 'available_dates')
     ->multiple();
 ```
 
-In multiple mode, after clicking a start date, holding `Shift` key and click an end date will select every date in that inbetween period. Starting from an already selected date removes that period instead.
+In multiple mode, after clicking a start date, holding `Shift` key and clicking an end date will select every date in that inbetween period. Starting from an already selected date removes that period instead.
 
 ### Supported scope
 
