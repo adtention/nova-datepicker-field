@@ -31,6 +31,7 @@
         :clearable="!isMultiple"
         :disabled="currentlyIsReadonly"
         :readonly="currentlyIsReadonly"
+        @date-click="handleDateClick"
       >
         <template
           #dp-input="{
@@ -152,6 +153,7 @@ import { DependentFormField, HandlesValidationErrors } from 'laravel-nova'
 import { VueDatePicker } from '@vuepic/vue-datepicker'
 import { resolveDateFnsLocale } from '../dateFnsLocale'
 import {
+  formatIsoDate,
   normalizeDateFilterValue,
   parseFlexibleDateInput,
   parseIsoDate,
@@ -169,7 +171,11 @@ export default {
   data() {
     return {
       darkModeObserver: null,
+      isShiftPressed: false,
       isDarkMode: false,
+      // Shift-range state: the anchor date decides whether the range adds or removes dates.
+      rangeSelectionAnchor: null,
+      rangeSelectionMode: null,
       novaFontFamily: '',
       textInputConfiguration: {
         enterSubmit: true,
@@ -189,9 +195,22 @@ export default {
     this.updateDarkModeState()
     this.updateNovaFontFamily()
     this.startDarkModeObserver()
+
+    if (typeof window !== 'undefined') {
+      // Date cells live in the teleported picker menu, so Shift must be tracked globally.
+      window.addEventListener('keydown', this.handleGlobalKeyDown)
+      window.addEventListener('keyup', this.handleGlobalKeyUp)
+      window.addEventListener('blur', this.resetShiftRangeState)
+    }
   },
 
   beforeUnmount() {
+    if (typeof window !== 'undefined') {
+      window.removeEventListener('keydown', this.handleGlobalKeyDown)
+      window.removeEventListener('keyup', this.handleGlobalKeyUp)
+      window.removeEventListener('blur', this.resetShiftRangeState)
+    }
+
     if (this.darkModeObserver !== null) {
       this.darkModeObserver.disconnect()
       this.darkModeObserver = null
@@ -377,6 +396,132 @@ export default {
       this.novaFontFamily = getComputedStyle(document.body).fontFamily
     },
 
+    handleGlobalKeyDown(event) {
+      if (event.key === 'Shift') {
+        this.isShiftPressed = true
+      }
+    },
+
+    handleGlobalKeyUp(event) {
+      if (event.key === 'Shift') {
+        this.isShiftPressed = false
+      }
+    },
+
+    resetShiftRangeState() {
+      // A window blur can swallow keyup and makes any half-finished range gesture stale.
+      this.isShiftPressed = false
+      this.clearRangeSelectionState()
+    },
+
+    handleDateClick(date) {
+      const clickedDate = this.normalizeCalendarDate(date)
+
+      if (!this.isMultiple || this.currentlyIsReadonly || clickedDate === null) {
+        return
+      }
+
+      if (!this.isShiftPressed || this.rangeSelectionAnchor === null) {
+        // Clicking a selected anchor means the next Shift-click removes that range.
+        this.rangeSelectionAnchor = clickedDate
+        this.rangeSelectionMode = this.isDateSelected(clickedDate) ? 'remove' : 'add'
+
+        return
+      }
+
+      const anchorDate = this.normalizeCalendarDate(this.rangeSelectionAnchor)
+
+      if (anchorDate === null) {
+        this.rangeSelectionAnchor = clickedDate
+
+        return
+      }
+
+      this.$nextTick(() => {
+        // vue-datepicker applies its own clicked-date toggle before we expand the range.
+        const selectedDates = Array.isArray(this.value) ? this.value : []
+        const rangeDates = this.buildDateRange(anchorDate, clickedDate)
+
+        this.value = this.rangeSelectionMode === 'remove'
+          ? this.removeDateSelections(selectedDates, rangeDates)
+          : this.mergeDateSelections([...selectedDates, ...rangeDates])
+      })
+    },
+
+    normalizeCalendarDate(value) {
+      const parsedDate = this.parseDateValue(value)
+
+      if (parsedDate === null) {
+        return null
+      }
+
+      return new Date(parsedDate.getFullYear(), parsedDate.getMonth(), parsedDate.getDate())
+    },
+
+    buildDateRange(startDate, endDate) {
+      const step = startDate <= endDate ? 1 : -1
+      const dates = []
+
+      for (
+        let date = new Date(startDate);
+        step === 1 ? date <= endDate : date >= endDate;
+        date.setDate(date.getDate() + step)
+      ) {
+        dates.push(new Date(date))
+      }
+
+      return dates
+    },
+
+    mergeDateSelections(dates) {
+      const datesByIsoDate = new Map()
+
+      dates.forEach((date) => {
+        const normalizedDate = this.normalizeCalendarDate(date)
+
+        if (normalizedDate !== null) {
+          // ISO date keys de-dupe by local calendar day, ignoring object identity.
+          datesByIsoDate.set(formatIsoDate(normalizedDate), normalizedDate)
+        }
+      })
+
+      return [...datesByIsoDate.entries()]
+        .sort(([left], [right]) => left.localeCompare(right))
+        .map(([, date]) => date)
+    },
+
+    removeDateSelections(selectedDates, datesToRemove) {
+      const datesToRemoveByIsoDate = new Set(
+        datesToRemove.map((date) => formatIsoDate(date)),
+      )
+
+      return this.mergeDateSelections(selectedDates)
+        .filter((date) => !datesToRemoveByIsoDate.has(formatIsoDate(date)))
+    },
+
+    isDateSelected(date) {
+      const isoDate = formatIsoDate(date)
+
+      return Array.isArray(this.value)
+        && this.value.some((selectedDate) => {
+          const normalizedDate = this.normalizeCalendarDate(selectedDate)
+
+          return normalizedDate !== null && formatIsoDate(normalizedDate) === isoDate
+        })
+    },
+
+    clearRangeSelectionState() {
+      this.rangeSelectionAnchor = null
+      this.rangeSelectionMode = null
+    },
+
+    resetRangeSelectionIfAnchorIsMissing() {
+      // Chip/backspace removal is not a range gesture; stale anchors should not survive it.
+      if (this.rangeSelectionAnchor !== null && !this.isDateSelected(this.rangeSelectionAnchor)) {
+        this.clearRangeSelectionState()
+      }
+    },
+
     /*
      * Set the initial, internal value for the field.
      */
@@ -524,6 +669,7 @@ export default {
       }
 
       this.value = this.value.filter((item, index) => index !== indexToRemove)
+      this.resetRangeSelectionIfAnchorIsMissing()
     },
 
     removeLastSelectedDate() {
@@ -532,10 +678,12 @@ export default {
       }
 
       this.value = this.value.slice(0, -1)
+      this.resetRangeSelectionIfAnchorIsMissing()
     },
 
     clearSelectedDates() {
       this.value = []
+      this.clearRangeSelectionState()
     },
   },
 }
