@@ -173,6 +173,7 @@ export default {
       darkModeObserver: null,
       isShiftPressed: false,
       isDarkMode: false,
+      // Shift-range state: the anchor date decides whether the range adds or removes dates.
       rangeSelectionAnchor: null,
       rangeSelectionMode: null,
       novaFontFamily: '',
@@ -196,8 +197,10 @@ export default {
     this.startDarkModeObserver()
 
     if (typeof window !== 'undefined') {
+      // Date cells live in the teleported picker menu, so Shift must be tracked globally.
       window.addEventListener('keydown', this.handleGlobalKeyDown)
       window.addEventListener('keyup', this.handleGlobalKeyUp)
+      window.addEventListener('blur', this.resetShiftRangeState)
     }
   },
 
@@ -205,6 +208,7 @@ export default {
     if (typeof window !== 'undefined') {
       window.removeEventListener('keydown', this.handleGlobalKeyDown)
       window.removeEventListener('keyup', this.handleGlobalKeyUp)
+      window.removeEventListener('blur', this.resetShiftRangeState)
     }
 
     if (this.darkModeObserver !== null) {
@@ -404,6 +408,11 @@ export default {
       }
     },
 
+    resetShiftRangeState() {
+      // A window blur can swallow keyup, leaving Shift stuck as pressed.
+      this.isShiftPressed = false
+    },
+
     handleDateClick(date) {
       const clickedDate = this.normalizeCalendarDate(date)
 
@@ -412,6 +421,7 @@ export default {
       }
 
       if (!this.isShiftPressed || this.rangeSelectionAnchor === null) {
+        // Clicking a selected anchor means the next Shift-click removes that range.
         this.rangeSelectionAnchor = clickedDate
         this.rangeSelectionMode = this.isDateSelected(clickedDate) ? 'remove' : 'add'
 
@@ -427,6 +437,7 @@ export default {
       }
 
       this.$nextTick(() => {
+        // vue-datepicker applies its own clicked-date toggle before we expand the range.
         const selectedDates = Array.isArray(this.value) ? this.value : []
         const rangeDates = this.buildDateRange(anchorDate, clickedDate)
 
@@ -468,6 +479,7 @@ export default {
         const normalizedDate = this.normalizeCalendarDate(date)
 
         if (normalizedDate !== null) {
+          // ISO date keys de-dupe by local calendar day, ignoring object identity.
           datesByIsoDate.set(formatIsoDate(normalizedDate), normalizedDate)
         }
       })
