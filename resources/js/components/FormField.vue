@@ -409,8 +409,9 @@ export default {
     },
 
     resetShiftRangeState() {
-      // A window blur can swallow keyup, leaving Shift stuck as pressed.
+      // A window blur can swallow keyup and makes any half-finished range gesture stale.
       this.isShiftPressed = false
+      this.clearRangeSelectionState()
     },
 
     handleDateClick(date) {
@@ -507,6 +508,18 @@ export default {
 
           return normalizedDate !== null && formatIsoDate(normalizedDate) === isoDate
         })
+    },
+
+    clearRangeSelectionState() {
+      this.rangeSelectionAnchor = null
+      this.rangeSelectionMode = null
+    },
+
+    resetRangeSelectionIfAnchorIsMissing() {
+      // Chip/backspace removal is not a range gesture; stale anchors should not survive it.
+      if (this.rangeSelectionAnchor !== null && !this.isDateSelected(this.rangeSelectionAnchor)) {
+        this.clearRangeSelectionState()
+      }
     },
 
     /*
@@ -656,11 +669,7 @@ export default {
       }
 
       this.value = this.value.filter((item, index) => index !== indexToRemove)
-
-      if (this.value.length === 0) {
-        this.rangeSelectionAnchor = null
-        this.rangeSelectionMode = null
-      }
+      this.resetRangeSelectionIfAnchorIsMissing()
     },
 
     removeLastSelectedDate() {
@@ -669,17 +678,12 @@ export default {
       }
 
       this.value = this.value.slice(0, -1)
-
-      if (this.value.length === 0) {
-        this.rangeSelectionAnchor = null
-        this.rangeSelectionMode = null
-      }
+      this.resetRangeSelectionIfAnchorIsMissing()
     },
 
     clearSelectedDates() {
       this.value = []
-      this.rangeSelectionAnchor = null
-      this.rangeSelectionMode = null
+      this.clearRangeSelectionState()
     },
   },
 }
