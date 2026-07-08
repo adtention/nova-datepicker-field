@@ -174,6 +174,7 @@ export default {
       isShiftPressed: false,
       isDarkMode: false,
       rangeSelectionAnchor: null,
+      rangeSelectionMode: null,
       novaFontFamily: '',
       textInputConfiguration: {
         enterSubmit: true,
@@ -412,6 +413,7 @@ export default {
 
       if (!this.isShiftPressed || this.rangeSelectionAnchor === null) {
         this.rangeSelectionAnchor = clickedDate
+        this.rangeSelectionMode = this.isDateSelected(clickedDate) ? 'remove' : 'add'
 
         return
       }
@@ -425,10 +427,12 @@ export default {
       }
 
       this.$nextTick(() => {
-        this.value = this.mergeDateSelections([
-          ...(Array.isArray(this.value) ? this.value : []),
-          ...this.buildDateRange(anchorDate, clickedDate),
-        ])
+        const selectedDates = Array.isArray(this.value) ? this.value : []
+        const rangeDates = this.buildDateRange(anchorDate, clickedDate)
+
+        this.value = this.rangeSelectionMode === 'remove'
+          ? this.removeDateSelections(selectedDates, rangeDates)
+          : this.mergeDateSelections([...selectedDates, ...rangeDates])
       })
     },
 
@@ -471,6 +475,26 @@ export default {
       return [...datesByIsoDate.entries()]
         .sort(([left], [right]) => left.localeCompare(right))
         .map(([, date]) => date)
+    },
+
+    removeDateSelections(selectedDates, datesToRemove) {
+      const datesToRemoveByIsoDate = new Set(
+        datesToRemove.map((date) => formatIsoDate(date)),
+      )
+
+      return this.mergeDateSelections(selectedDates)
+        .filter((date) => !datesToRemoveByIsoDate.has(formatIsoDate(date)))
+    },
+
+    isDateSelected(date) {
+      const isoDate = formatIsoDate(date)
+
+      return Array.isArray(this.value)
+        && this.value.some((selectedDate) => {
+          const normalizedDate = this.normalizeCalendarDate(selectedDate)
+
+          return normalizedDate !== null && formatIsoDate(normalizedDate) === isoDate
+        })
     },
 
     /*
@@ -623,6 +647,7 @@ export default {
 
       if (this.value.length === 0) {
         this.rangeSelectionAnchor = null
+        this.rangeSelectionMode = null
       }
     },
 
@@ -635,12 +660,14 @@ export default {
 
       if (this.value.length === 0) {
         this.rangeSelectionAnchor = null
+        this.rangeSelectionMode = null
       }
     },
 
     clearSelectedDates() {
       this.value = []
       this.rangeSelectionAnchor = null
+      this.rangeSelectionMode = null
     },
   },
 }
