@@ -14,14 +14,14 @@ function calendarDay(page, day) {
 test('the date menu keeps the side it opened on while the page scrolls', async ({ page }) => {
   const errors = await openHarness(page, 'field')
 
-  await checkMenuKeepsItsSide(page, page.getByPlaceholder('Date'))
+  await checkMenuKeepsItsSide(page, page.locator('input#date'))
 
   expect(errors).toEqual([])
 })
 
 test('a typed date followed by Enter becomes the field value', async ({ page }) => {
   const errors = await openHarness(page, 'field')
-  const input = page.getByPlaceholder('Date')
+  const input = page.locator('input#date')
 
   await input.click()
   await page.keyboard.type('03.10.2026')
