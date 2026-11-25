@@ -18,20 +18,16 @@
         :locale="dateFnsLocale"
         :dark="isDarkMode"
         :multi-dates="isMultiple"
-        :multi-dates-separator="multiDatesSeparator"
         :time-config="timeConfiguration"
         :min-date="minimumDate"
         :max-date="maximumDate"
         :auto-apply="autoApply"
-        :close-on-auto-apply="closeOnAutoApply"
         :config="calendarConfiguration"
         :action-row="actionRowConfiguration"
-        :format="inputDisplayFormat"
         :text-input="textInputOptions"
         :formats="formatOptions"
         :input-attrs="inputAttributes"
         :placeholder="currentField.name"
-        :clearable="!isMultiple"
         :disabled="currentlyIsReadonly"
         :readonly="currentlyIsReadonly"
         @date-click="handleDateClick"
@@ -42,12 +38,10 @@
           #dp-input="{
             value: inputValue,
             onBlur,
-            onEnter,
             onFocus,
             onInput,
             onKeypress,
             onPaste,
-            onTab,
             openMenu,
           }"
         >
@@ -132,8 +126,11 @@
             </div>
           </div>
 
+          <!-- Only onKeypress for keys: in vue-datepicker 14 it already runs the Enter and Tab
+               handlers, so binding onEnter/onTab as well saved a typed date twice. -->
           <input
             v-else
+            v-bind="slotInputAttributes"
             class="w-full form-control form-input form-control-bordered"
             :disabled="currentlyIsReadonly"
             :placeholder="currentField.name"
@@ -142,8 +139,6 @@
             @blur="onBlur"
             @focus="onFocus"
             @input="onInput"
-            @keydown.enter="onEnter"
-            @keydown.tab="onTab"
             @keydown="onKeypress"
             @paste="onPaste"
           >
@@ -252,10 +247,6 @@ export default {
       return true
     },
 
-    closeOnAutoApply() {
-      return !this.isMultiple
-    },
-
     isMultiple() {
       return this.currentField?.multiple === true
     },
@@ -282,11 +273,23 @@ export default {
       return this.parseDateValue(this.currentField.max)
     },
 
-    multiDatesSeparator() {
-      return ', '
+    /**
+     * Options for the library's own input. `clearable` lives here since vue-datepicker 14
+     * (it used to be a root prop): the multiple mode clears through its chips instead.
+     */
+    inputAttributes() {
+      return {
+        ...this.slotInputAttributes,
+        clearable: !this.isMultiple,
+      }
     },
 
-    inputAttributes() {
+    /**
+     * The single-date mode renders its own `<input>` in the `dp-input` slot, and the library
+     * only applies `input-attrs` to the default input it replaces. Bind these on the slot
+     * input as well, so Nova's field label (`for` = the field's uniqueKey) points at it.
+     */
+    slotInputAttributes() {
       return {
         id: this.currentField.uniqueKey ?? this.currentField.attribute,
         name: this.currentField.attribute,

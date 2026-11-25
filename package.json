@@ -9,7 +9,7 @@
     "production": "mix --production"
   },
   "dependencies": {
-    "@vuepic/vue-datepicker": "^12.1.0",
+    "@vuepic/vue-datepicker": "^14.0.0",
     "date-fns": "^4.1.0"
   },
   "devDependencies": {
