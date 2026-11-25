@@ -18,7 +18,6 @@
         :locale="dateFnsLocale"
         :dark="isDarkMode"
         :multi-dates="isMultiple"
-        :multi-dates-separator="multiDatesSeparator"
         :time-config="timeConfiguration"
         :min-date="minimumDate"
         :max-date="maximumDate"
@@ -280,10 +279,6 @@ export default {
 
     maximumDate() {
       return this.parseDateValue(this.currentField.max)
-    },
-
-    multiDatesSeparator() {
-      return ', '
     },
 
     inputAttributes() {
