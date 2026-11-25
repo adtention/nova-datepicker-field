@@ -9,7 +9,10 @@
         <VueDatePicker
           v-model="startValue"
           class="w-full mt-1 nova-datepicker-field"
+          ref="startPicker"
           :teleport="true"
+          :floating="menuSides.start.floating"
+          :ui="menuSides.start.ui"
           :locale="dateFnsLocale"
           :time-config="timeConfiguration"
           :auto-apply="true"
@@ -17,6 +20,8 @@
           :formats="formats"
           :placeholder="__('Start')"
           :input-attrs="{ dusk: `${filter.uniqueKey}-range-start` }"
+          @open="lockMenuSide('start')"
+          @closed="noteMenuClosed('start')"
         />
       </label>
 
@@ -28,7 +33,10 @@
         <VueDatePicker
           v-model="endValue"
           class="w-full mt-1 nova-datepicker-field"
+          ref="endPicker"
           :teleport="true"
+          :floating="menuSides.end.floating"
+          :ui="menuSides.end.ui"
           :locale="dateFnsLocale"
           :time-config="timeConfiguration"
           :auto-apply="true"
@@ -36,6 +44,8 @@
           :formats="formats"
           :placeholder="__('End')"
           :input-attrs="{ dusk: `${filter.uniqueKey}-range-end` }"
+          @open="lockMenuSide('end')"
+          @closed="noteMenuClosed('end')"
         />
       </label>
     </template>
@@ -51,6 +61,7 @@ import {
   parseFlexibleDateInput,
   parseIsoDate,
 } from '../dateParsing'
+import { createMenuSide, lockSideAfterOpening, markMenuClosed } from '../menuSide'
 
 export default {
   components: {
@@ -76,6 +87,11 @@ export default {
 
   data() {
     return {
+      // Keep each open menu on one side of its input; see menuSide.js.
+      menuSides: {
+        start: createMenuSide('nova-datepicker-field-menu'),
+        end: createMenuSide('nova-datepicker-field-menu'),
+      },
       startValue: null,
       endValue: null,
       debouncedEventEmitter: null,
@@ -122,6 +138,20 @@ export default {
   },
 
   methods: {
+    /**
+     * @param {'start'|'end'} pickerKey
+     */
+    lockMenuSide(pickerKey) {
+      return lockSideAfterOpening(this.menuSides[pickerKey], () => this.$refs[`${pickerKey}Picker`]?.$el)
+    },
+
+    /**
+     * @param {'start'|'end'} pickerKey
+     */
+    noteMenuClosed(pickerKey) {
+      markMenuClosed(this.menuSides[pickerKey])
+    },
+
     setCurrentFilterValue() {
       const [startValue, endValue] = this.filter.currentValue || [null, null]
 
