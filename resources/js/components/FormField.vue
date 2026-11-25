@@ -13,8 +13,8 @@
         :style="datePickerStyle"
         ref="datePicker"
         :teleport="true"
-        :floating="floatingConfiguration"
-        :ui="{ menu: menuClass }"
+        :floating="menuSide.floating"
+        :ui="menuSide.ui"
         :locale="dateFnsLocale"
         :dark="isDarkMode"
         :multi-dates="isMultiple"
@@ -36,7 +36,7 @@
         :readonly="currentlyIsReadonly"
         @date-click="handleDateClick"
         @open="lockMenuSide"
-        @closed="releaseMenuSide"
+        @closed="noteMenuClosed"
       >
         <template
           #dp-input="{
@@ -163,17 +163,7 @@ import {
   parseFlexibleDateInput,
   parseIsoDate,
 } from '../dateParsing'
-import { markRaw } from 'vue'
-import {
-  createFlipOptions,
-  lockMenuToSide,
-  sideOfOpenMenu,
-  unlockMenuSide,
-  waitForMenuPosition,
-} from '../menuSide'
-
-/** Gives each field's teleported menu its own class, so lockMenuSide can find it in <body>. */
-let menuCount = 0
+import { createMenuSide, lockSideAfterOpening, markMenuClosed } from '../menuSide'
 
 export default {
   mixins: [DependentFormField, HandlesValidationErrors],
@@ -187,10 +177,8 @@ export default {
   data() {
     return {
       darkModeObserver: null,
-      menuClass: `nova-datepicker-menu-${++menuCount}`,
-      // vue-datepicker reads this once and floating-ui keeps the flip object by
-      // reference; lockMenuSide changes it in place. markRaw keeps Vue out of it.
-      floatingConfiguration: markRaw({ flip: createFlipOptions() }),
+      // Keeps the open menu on one side of the input; see menuSide.js.
+      menuSide: createMenuSide('nova-datepicker-field-menu'),
       isShiftPressed: false,
       isDarkMode: false,
       // Shift-range state: the anchor date decides whether the range adds or removes dates.
@@ -381,22 +369,12 @@ export default {
   },
 
   methods: {
-    async lockMenuSide() {
-      await waitForMenuPosition()
-
-      const menuElement = document.querySelector(`.${this.menuClass}`)
-      const side = sideOfOpenMenu(menuElement, this.$refs.datePicker?.$el)
-
-      // The menu may have closed while we waited.
-      if (side === null) {
-        return
-      }
-
-      lockMenuToSide(this.floatingConfiguration.flip, side)
+    lockMenuSide() {
+      return lockSideAfterOpening(this.menuSide, () => this.$refs.datePicker?.$el)
     },
 
-    releaseMenuSide() {
-      unlockMenuSide(this.floatingConfiguration.flip)
+    noteMenuClosed() {
+      markMenuClosed(this.menuSide)
     },
 
     updateDarkModeState() {
