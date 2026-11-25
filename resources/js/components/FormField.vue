@@ -11,7 +11,10 @@
         class="w-full nova-datepicker-field"
         :class="{ 'nova-datepicker-field--multiple': isMultiple }"
         :style="datePickerStyle"
+        ref="datePicker"
         :teleport="true"
+        :floating="menuSide.floating"
+        :ui="menuSide.ui"
         :locale="dateFnsLocale"
         :dark="isDarkMode"
         :multi-dates="isMultiple"
@@ -32,6 +35,8 @@
         :disabled="currentlyIsReadonly"
         :readonly="currentlyIsReadonly"
         @date-click="handleDateClick"
+        @open="lockMenuSide"
+        @closed="noteMenuClosed"
       >
         <template
           #dp-input="{
@@ -158,6 +163,7 @@ import {
   parseFlexibleDateInput,
   parseIsoDate,
 } from '../dateParsing'
+import { createMenuSide, lockSideAfterOpening, markMenuClosed } from '../menuSide'
 
 export default {
   mixins: [DependentFormField, HandlesValidationErrors],
@@ -171,6 +177,8 @@ export default {
   data() {
     return {
       darkModeObserver: null,
+      // Keeps the open menu on one side of the input; see menuSide.js.
+      menuSide: createMenuSide('nova-datepicker-field-menu'),
       isShiftPressed: false,
       isDarkMode: false,
       // Shift-range state: the anchor date decides whether the range adds or removes dates.
@@ -361,6 +369,14 @@ export default {
   },
 
   methods: {
+    lockMenuSide() {
+      return lockSideAfterOpening(this.menuSide, () => this.$refs.datePicker?.$el)
+    },
+
+    noteMenuClosed() {
+      markMenuClosed(this.menuSide)
+    },
+
     updateDarkModeState() {
       if (typeof document === 'undefined') {
         this.isDarkMode = false
