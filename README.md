@@ -135,6 +135,14 @@ Run a specific test:
 php vendor/bin/phpunit --filter=it_defaults_locale_meta_to_the_application_locale
 ```
 
+Run the browser tests:
+
+```bash
+npm run test:browser
+```
+
+They mount `FormField.vue` and `FilterField.vue` on a small Vite page without Nova (`tests/browser/harness`) and drive them with Playwright in the Google Chrome installed on your machine, so no browser download is needed. They run locally only, not in GitHub Actions. To watch them, add `--headed` or `--ui`.
+
 ## License
 
 MIT
