@@ -11,7 +11,10 @@
         class="w-full nova-datepicker-field"
         :class="{ 'nova-datepicker-field--multiple': isMultiple }"
         :style="datePickerStyle"
+        ref="datePicker"
         :teleport="true"
+        :floating="floatingConfiguration"
+        :ui="{ menu: menuClass }"
         :locale="dateFnsLocale"
         :dark="isDarkMode"
         :multi-dates="isMultiple"
@@ -32,6 +35,8 @@
         :disabled="currentlyIsReadonly"
         :readonly="currentlyIsReadonly"
         @date-click="handleDateClick"
+        @open="lockMenuSide"
+        @closed="releaseMenuSide"
       >
         <template
           #dp-input="{
@@ -158,6 +163,17 @@ import {
   parseFlexibleDateInput,
   parseIsoDate,
 } from '../dateParsing'
+import { markRaw } from 'vue'
+import {
+  createFlipOptions,
+  lockMenuToSide,
+  sideOfOpenMenu,
+  unlockMenuSide,
+  waitForMenuPosition,
+} from '../menuSide'
+
+/** Gives each field's teleported menu its own class, so lockMenuSide can find it in <body>. */
+let menuCount = 0
 
 export default {
   mixins: [DependentFormField, HandlesValidationErrors],
@@ -171,6 +187,10 @@ export default {
   data() {
     return {
       darkModeObserver: null,
+      menuClass: `nova-datepicker-menu-${++menuCount}`,
+      // vue-datepicker reads this once and floating-ui keeps the flip object by
+      // reference; lockMenuSide changes it in place. markRaw keeps Vue out of it.
+      floatingConfiguration: markRaw({ flip: createFlipOptions() }),
       isShiftPressed: false,
       isDarkMode: false,
       // Shift-range state: the anchor date decides whether the range adds or removes dates.
@@ -361,6 +381,24 @@ export default {
   },
 
   methods: {
+    async lockMenuSide() {
+      await waitForMenuPosition()
+
+      const menuElement = document.querySelector(`.${this.menuClass}`)
+      const side = sideOfOpenMenu(menuElement, this.$refs.datePicker?.$el)
+
+      // The menu may have closed while we waited.
+      if (side === null) {
+        return
+      }
+
+      lockMenuToSide(this.floatingConfiguration.flip, side)
+    },
+
+    releaseMenuSide() {
+      unlockMenuSide(this.floatingConfiguration.flip)
+    },
+
     updateDarkModeState() {
       if (typeof document === 'undefined') {
         this.isDarkMode = false
